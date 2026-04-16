@@ -1,0 +1,14 @@
+{
+  "name": "xhs-ai-assistant",
+  "version": "1.0.0",
+  "description": "小红书AI发布助手",
+  "scripts": {
+    "build": "echo done"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0"
+  }
+}

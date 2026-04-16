@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小红书 AI 发布助手</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A0A14;--card:#13131F;--card2:#1A1A2A;
+  --border:#252538;--red:#FF2442;--red2:#E01E3A;--red-glow:rgba(255,36,66,.15);
+  --text:#F0F0F5;--muted:#7878A0;--green:#34D399;--amber:#FBBF24;
+  --radius:16px;--font:'PingFang SC','SF Pro Display',system-ui,sans-serif
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column}
+
+/* 顶栏 */
+header{
+  background:linear-gradient(180deg,rgba(255,36,66,.08) 0%,transparent 100%);
+  border-bottom:1px solid var(--border);padding:0 32px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)
+}
+.logo{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:700;letter-spacing:-.02em}
+.logo-icon{width:32px;height:32px;background:var(--red);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+#mcp-dot{font-size:12px;display:flex;align-items:center;gap:6px;color:var(--amber);padding:6px 14px;background:rgba(251,191,36,.08);border-radius:20px;border:1px solid rgba(251,191,36,.15)}
+#mcp-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* 主体 */
+main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px 32px;max-width:1400px;width:100%;margin:0 auto}
+
+/* 卡片 */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:border-color .2s}
+.card:hover{border-color:#353550}
+.section-label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.section-label span{font-size:16px}
+
+/* 折叠配置 */
+.config-toggle{
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  padding:14px 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:12px;transition:all .2s
+}
+.config-toggle:hover{border-color:#353550}
+.config-toggle .label{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.config-toggle .arrow{color:var(--muted);font-size:12px;transition:transform .2s}
+.config-toggle.open .arrow{transform:rotate(180deg)}
+.config-body{overflow:hidden;max-height:0;transition:max-height .3s ease;margin-bottom:12px}
+.config-body.open{max-height:600px}
+.config-body .card{margin:0;border-top-left-radius:0;border-top-right-radius:0;border-top:none}
+.config-toggle.open{border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
+
+/* 输入 */
+.field-label{font-size:12px;color:var(--muted);margin-bottom:6px;margin-top:16px;display:block;font-weight:500}
+.field-label:first-of-type{margin-top:0}
+.field-hint{color:var(--muted);font-size:11px;font-weight:400}
+
+input,textarea,select{
+  width:100%;background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;color:var(--text);font-family:var(--font);
+  font-size:14px;outline:none;transition:all .2s
+}
+input:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}
+input::placeholder,textarea::placeholder{color:#50506a}
+textarea{resize:vertical;min-height:80px;line-height:1.7}
+.key-row{display:flex;gap:8px}
+.key-row input{font-family:'SF Mono','Courier New',monospace;font-size:13px}
+.eye-btn{background:var(--card2);border:1px solid var(--border);border-radius:10px;
+  padding:0 14px;cursor:pointer;font-size:15px;color:var(--muted);transition:all .2s;flex-shrink:0}
+.eye-btn:hover{color:var(--text);border-color:#353550}
+.model-row{display:flex;gap:8px}
+.model-row input{font-family:'SF Mono','Courier New',monospace;font-size:13px}
+.preset-btn{background:var(--card2);border:1px solid var(--border);border-radius:10px;
+  padding:0 14px;cursor:pointer;color:var(--muted);font-size:13px;white-space:nowrap;flex-shrink:0;transition:all .2s}
+.preset-btn:hover{color:var(--text);border-color:#353550}
+.dropdown-wrap{position:relative}
+.dropdown-wrap select{position:absolute;opacity:0;width:100%;height:100%;top:0;left:0;cursor:pointer}
+
+/* 按钮 */
+.btn{padding:13px 20px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.01em}
+.btn-primary{background:var(--red);color:#fff;box-shadow:0 4px 16px rgba(255,36,66,.25)}
+.btn-primary:hover{background:var(--red2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,36,66,.35)}
+.btn-primary:active{transform:translateY(0)}
+.btn-secondary{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#252538;border-color:#353550}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-full{width:100%}
+.btn-row{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:20px}
+
+/* 进度 */
+.progress-wrap{margin-top:14px;display:none}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--red),#FF6B8A);width:0%;transition:width .5s ease;border-radius:2px}
+.progress-text{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* 预览区 - 仿小红书卡片 */
+.preview-phone{
+  background:var(--card2);border-radius:20px;padding:20px;
+  border:1px solid var(--border);margin-bottom:16px
+}
+.preview-phone .phone-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.phone-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--red),#FF6B8A);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.phone-name{font-size:13px;font-weight:600}
+.phone-time{font-size:11px;color:var(--muted)}
+
+.preview-title-input{font-size:16px;font-weight:700;margin-bottom:10px;background:transparent;border:1px dashed var(--border);padding:10px 14px}
+.preview-title-input:focus{border-style:solid}
+.preview-content{min-height:100px;line-height:1.8;background:transparent;border:1px dashed var(--border);padding:12px 14px;font-size:14px}
+.preview-content:focus{border-style:solid}
+
+.tags-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag-chip{background:rgba(255,36,66,.1);color:var(--red);font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500}
+.tags-input{margin-top:8px;font-size:13px}
+
+.img-preview{
+  background:var(--card2);border:1px solid var(--border);border-radius:14px;
+  min-height:160px;display:flex;align-items:center;justify-content:center;
+  margin-top:14px;overflow:hidden
+}
+.img-preview img{width:100%;max-height:260px;object-fit:cover;border-radius:14px}
+.img-placeholder{color:var(--muted);font-size:13px;text-align:center;padding:30px}
+
+/* 状态 */
+.status-msg{font-size:12px;margin-top:10px;min-height:18px;transition:all .3s}
+.status-ok{color:var(--green)}
+.status-err{color:#EF4444}
+.status-wait{color:var(--amber)}
+
+/* 保存按钮行 */
+.save-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.btn-save{padding:9px 18px;font-size:13px}
+
+/* 二维码弹窗 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:36px;text-align:center;max-width:340px;width:90%}
+.modal h3{font-size:17px;margin-bottom:20px;font-weight:700}
+.modal img{width:220px;height:220px;border-radius:14px;margin-bottom:16px;background:white;padding:10px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:#353550}
+
+@media(max-width:860px){
+  main{grid-template-columns:1fr;padding:16px}
+  header{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">XHS</div>
+    小红书 AI 助手
+  </div>
+  <div id="mcp-dot">MCP 连接中...</div>
+</header>
+
+<main>
+  <!-- 左侧 -->
+  <div style="display:flex;flex-direction:column;gap:0">
+
+    <!-- 折叠配置 -->
+    <div class="config-toggle" onclick="toggleConfig()" id="cfg-toggle">
+      <div class="label"><span>&#9881;</span> API 配置</div>
+      <div class="arrow">&#9660;</div>
+    </div>
+    <div class="config-body" id="cfg-body">
+      <div class="card" style="border-radius:0 0 var(--radius) var(--radius)">
+
+        <label class="field-label">API Key</label>
+        <div class="key-row">
+          <input type="password" id="api-key" placeholder="sk-..." autocomplete="off">
+          <button class="eye-btn" onclick="toggleKey()">&#128065;</button>
+        </div>
+
+        <label class="field-label">Base URL <span class="field-hint">（代理地址）</span></label>
+        <input type="text" id="base-url" placeholder="https://api.anthropic.com">
+
+        <label class="field-label">模型 <span class="field-hint">（可自由填写）</span></label>
+        <div class="model-row">
+          <input type="text" id="model" placeholder="gemini-2.5-flash">
+          <div class="dropdown-wrap">
+            <button class="preset-btn">预设 &#9662;</button>
+            <select onchange="document.getElementById('model').value=this.value;this.value=''">
+              <option value="">选择预设</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+              <option value="grok-3">grok-3</option>
+              <option value="kimi-latest">kimi-latest</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="field-label">坐标</label>
+        <input type="text" id="coordinate" placeholder="花桥">
+
+        <div class="save-row">
+          <button class="btn btn-secondary btn-save" onclick="testConn()" id="test-btn">测试连接</button>
+          <button class="btn btn-secondary btn-save" onclick="saveConfig()">保存</button>
+        </div>
+        <div class="status-msg" id="cfg-status"></div>
+      </div>
+    </div>
+
+    <!-- 输入卡片 -->
+    <div class="card" style="margin-top:12px">
+      <div class="section-label"><span>&#9998;</span> 想发什么</div>
+
+      <label class="field-label">主题</label>
+      <input type="text" id="topic" placeholder="一句话说清楚 比如：花桥有人吗">
+
+      <label class="field-label">补充 <span class="field-hint">（选填，越具体越好）</span></label>
+      <textarea id="desc" rows="3" placeholder="想表达什么情绪 面向谁 有什么细节..."></textarea>
+
+      <button class="btn btn-primary btn-full" style="margin-top:18px" onclick="generate()" id="gen-btn">
+        &#10024; 生成
+      </button>
+
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text">准备中...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右侧 预览 -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <div class="card" style="flex:1;display:flex;flex-direction:column">
+      <div class="section-label"><span>&#128064;</span> 预览 <span class="field-hint" style="margin-left:auto;font-size:11px">可直接编辑</span></div>
+
+      <div class="preview-phone">
+        <div class="phone-header">
+          <div class="phone-avatar">Me</div>
+          <div>
+            <div class="phone-name">我的笔记</div>
+            <div class="phone-time">刚刚</div>
+          </div>
+        </div>
+
+        <input type="text" id="preview-title" class="preview-title-input" placeholder="标题...">
+        <textarea id="preview-content" class="preview-content" placeholder="正文..."></textarea>
+
+        <div id="tags-display" class="tags-row"></div>
+        <input type="text" id="preview-tags" class="tags-input" placeholder="#花桥  #交朋友" oninput="renderTags()">
+
+        <div class="img-preview" id="img-preview">
+          <div class="img-placeholder">&#128444; 生成后显示配图</div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:auto">
+        <button class="btn btn-secondary" onclick="generate()">&#128260; 重新生成</button>
+        <button class="btn btn-primary" onclick="publishPost()" id="pub-btn">&#128640; 发布到小红书</button>
+      </div>
+      <div class="status-msg" id="pub-status"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- 二维码弹窗 -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal">
+    <h3>&#128241; 用小红书扫码登录</h3>
+    <img id="qr-img" src="" alt="二维码">
+    <p>扫码完成后点击继续</p>
+    <button class="btn btn-primary btn-full" onclick="onScanned()">已扫码，继续发布</button>
+  </div>
+</div>
+
+<script>
+// ── 初始化 ────────────────────────────────────────────────────
+window.onload = async () => {
+  const cfg = await fetch('/api/config').then(r=>r.json())
+  document.getElementById('api-key').value    = cfg.api_key    || ''
+  document.getElementById('base-url').value   = cfg.base_url   || 'https://api.anthropic.com'
+  document.getElementById('model').value      = cfg.model      || 'gemini-2.5-flash'
+  document.getElementById('coordinate').value = cfg.coordinate || '花桥'
+  checkMCP()
+}
+
+async function checkMCP() {
+  const dot = document.getElementById('mcp-dot')
+  try {
+    const r = await fetch('/api/mcp/status').then(r=>r.json())
+    if (r.ok && r.logged_in)      { dot.textContent='已连接 \u00B7 已登录'; dot.style.color='#34D399'; dot.style.background='rgba(52,211,153,.08)'; dot.style.borderColor='rgba(52,211,153,.15)' }
+    else if (r.ok && !r.logged_in){ dot.textContent='已连接 \u00B7 未登录'; dot.style.color='#FBBF24' }
+    else                          { dot.textContent='未连接'; dot.style.color='#EF4444'; dot.style.background='rgba(239,68,68,.08)'; dot.style.borderColor='rgba(239,68,68,.15)' }
+  } catch { dot.textContent='未连接'; dot.style.color='#EF4444'; dot.style.background='rgba(239,68,68,.08)'; dot.style.borderColor='rgba(239,68,68,.15)' }
+}
+
+// ── 折叠配置 ──────────────────────────────────────────────────
+function toggleConfig() {
+  document.getElementById('cfg-toggle').classList.toggle('open')
+  document.getElementById('cfg-body').classList.toggle('open')
+}
+
+// ── 配置 ──────────────────────────────────────────────────────
+function toggleKey() {
+  const el=document.getElementById('api-key')
+  el.type = el.type==='password' ? 'text' : 'password'
+}
+
+async function saveConfig() {
+  const s = document.getElementById('cfg-status')
+  await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      api_key:   document.getElementById('api-key').value.trim(),
+      base_url:  document.getElementById('base-url').value.trim() || 'https://api.anthropic.com',
+      model:     document.getElementById('model').value.trim(),
+      coordinate:document.getElementById('coordinate').value.trim() || '花桥'
+    })})
+  s.textContent='\u2705 已保存'; s.className='status-msg status-ok'
+  setTimeout(()=>s.textContent='',2000)
+}
+
+// ── 标签渲染 ──────────────────────────────────────────────────
+function renderTags() {
+  const raw = document.getElementById('preview-tags').value
+  const tags = raw.split(/\s+/).filter(t=>t.startsWith('#') && t.length>1)
+  document.getElementById('tags-display').innerHTML = tags.map(t=>`<span class="tag-chip">${t}</span>`).join('')
+}
+
+// ── 生成 ──────────────────────────────────────────────────────
+let pendingPublish = null
+
+async function generate() {
+  const api   = document.getElementById('api-key').value.trim()
+  const topic = document.getElementById('topic').value.trim()
+  if (!api)   return showStatus('cfg-status','请先配置 API Key','err')
+  if (!topic) return showStatus('cfg-status','请填写主题','err')
+
+  setGenLoading(true)
+  setProgress(0.1,'优化思路...')
+
+  try {
+    setTimeout(()=>setProgress(0.4,'生成内容...'),800)
+    const r = await fetch('/api/generate',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        api_key: api,
+        base_url: document.getElementById('base-url').value.trim(),
+        model:    document.getElementById('model').value.trim(),
+        topic,
+        desc:  document.getElementById('desc').value.trim(),
+        coord: document.getElementById('coordinate').value.trim()||'花桥'
+      })
+    }).then(r=>r.json())
+
+    if (!r.ok) throw new Error(r.error)
+    setProgress(0.85,'生成配图...')
+    const d = r.data
+
+    document.getElementById('preview-title').value   = d.title   || ''
+    document.getElementById('preview-content').value = d.content || ''
+    document.getElementById('preview-tags').value    = (d.tags||[]).map(t=>'#'+t).join('  ')
+    renderTags()
+
+    if (d.image_preview) {
+      document.getElementById('img-preview').innerHTML =
+        `<img src="data:image/png;base64,${d.image_preview}" alt="配图">`
+    }
+    setProgress(1,'\u2705 完成')
+  } catch(e) {
+    setProgress(0,'\u274C '+e.message)
+  } finally {
+    setGenLoading(false)
+  }
+}
+
+// ── 发布 ──────────────────────────────────────────────────────
+async function publishPost() {
+  const title   = document.getElementById('preview-title').value.trim()
+  const content = document.getElementById('preview-content').value.trim()
+  if (!title||!content) return showStatus('pub-status','先生成内容','err')
+
+  setPubLoading(true)
+  showStatus('pub-status','连接小红书...','wait')
+
+  const payload = {title,content,tags:document.getElementById('preview-tags').value}
+  const r = await fetch('/api/publish',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)}).then(r=>r.json())
+
+  if (r.need_login) {
+    pendingPublish = payload
+    await showQR()
+    return
+  }
+  setPubLoading(false)
+  if (r.ok) showStatus('pub-status','\uD83C\uDF89 发布成功','ok')
+  else      showStatus('pub-status','\u274C '+(r.error||'发布失败'),'err')
+}
+
+async function showQR() {
+  const r = await fetch('/api/mcp/qrcode').then(r=>r.json())
+  if (!r.ok) { setPubLoading(false); return showStatus('pub-status','\u274C 获取二维码失败','err') }
+  document.getElementById('qr-img').src = 'data:image/png;base64,'+r.image
+  document.getElementById('qr-modal').classList.add('show')
+}
+
+async function onScanned() {
+  document.getElementById('qr-modal').classList.remove('show')
+  if (!pendingPublish) return
+  showStatus('pub-status','发布中...','wait')
+  const r = await fetch('/api/publish',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(pendingPublish)}).then(r=>r.json())
+  setPubLoading(false)
+  if (r.ok) { showStatus('pub-status','\uD83C\uDF89 发布成功','ok'); checkMCP() }
+  else      showStatus('pub-status','\u274C '+(r.error||'发布失败'),'err')
+  pendingPublish=null
+}
+
+// ── 辅助 ──────────────────────────────────────────────────────
+function setGenLoading(on) {
+  const b=document.getElementById('gen-btn')
+  b.disabled=on; b.innerHTML=on?'生成中...':'&#10024; 生成'
+  document.getElementById('progress-wrap').style.display=on?'block':'block'
+}
+function setPubLoading(on) {
+  const b=document.getElementById('pub-btn')
+  b.disabled=on; b.innerHTML=on?'发布中...':'&#128640; 发布到小红书'
+}
+function setProgress(pct,txt) {
+  document.getElementById('progress-fill').style.width=(pct*100)+'%'
+  document.getElementById('progress-text').textContent=txt
+  document.getElementById('progress-wrap').style.display='block'
+}
+async function testConn() {
+  const api  = document.getElementById('api-key').value.trim()
+  const url  = document.getElementById('base-url').value.trim()
+  const mdl  = document.getElementById('model').value.trim()
+  if (!api) return showStatus('cfg-status','请先填写 API Key','err')
+  const btn = document.getElementById('test-btn')
+  btn.textContent='测试中...'; btn.disabled=true
+  try {
+    const r = await fetch('/api/test',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({api_key:api,base_url:url,model:mdl})
+    }).then(r=>r.json())
+    if (r.ok) showStatus('cfg-status','\u2705 连接成功','ok')
+    else      showStatus('cfg-status','\u274C '+r.error,'err')
+  } catch(e) { showStatus('cfg-status','\u274C '+e.message,'err') }
+  btn.textContent='测试连接'; btn.disabled=false
+}
+
+function showStatus(id,msg,type) {
+  const el=document.getElementById(id)
+  el.textContent=msg
+  el.className='status-msg status-'+(type==='ok'?'ok':type==='err'?'err':'wait')
+}
+</script>
+</body>
+</html>
+</content>
+</invoke>

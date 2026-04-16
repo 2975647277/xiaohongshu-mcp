@@ -1,0 +1,30 @@
+# 敏感文件
+cookies.json
+config.json
+
+# Python
+__pycache__/
+*.pyc
+.venv*/
+venv/
+
+# 压缩包/二进制
+*.tar.gz
+mcp.tar.gz
+
+# 测试文件
+test_cover.py
+
+# Node
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# 临时文件
+/tmp/
+*.png
+!static/preview.png

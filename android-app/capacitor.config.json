@@ -1,0 +1,15 @@
+{
+  "appId": "com.xhs.aiassistant",
+  "appName": "小红书AI助手",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#FF2442",
+      "showSpinner": false
+    }
+  }
+}
