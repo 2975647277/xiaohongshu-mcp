@@ -175,6 +175,13 @@ xiaohongshu-mcp/
 - 请遵守小红书平台的使用规则和服务条款
 - 不得用于任何违法违规用途
 
+## 联系方式
+
+| 赏金打赏 | 沟通交流群 | 个人微信 |
+|:---:|:---:|:---:|
+| <img src="docs/reward.jpg" width="200"> | <img src="docs/group.jpg" width="200"> | <img src="docs/wechat.jpg" width="200"> |
+| 觉得好用可以打赏支持 | 扫码加入交流群，问题反馈/功能建议 | 加我微信，备注「小红书MCP」 |
+
 ## License
 
 MIT
