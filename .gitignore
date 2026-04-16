@@ -28,3 +28,4 @@ node_modules/
 /tmp/
 *.png
 !static/preview.png
+!docs/*.png

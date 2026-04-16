@@ -2,6 +2,20 @@
 
 基于 MCP 协议的小红书自动化工具，支持 AI 生成内容、一键发布、定时发布、多端使用。
 
+## 项目预览
+
+### Web UI 界面
+
+<img src="docs/webui-preview.png" width="800">
+
+> 左侧输入主题，AI 自动生成拟人化文案 + 封面图，右侧实时预览，一键发布到小红书
+
+### AI 生成封面示例
+
+<img src="docs/cover-example.png" width="300">
+
+> 极简风格封面，一句话钩子，高点击率
+
 ## 功能特性
 
 - 小红书扫码登录，Cookie 自动管理
